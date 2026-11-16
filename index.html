@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Go-live på 14 dage, Kajplads ApS (eksempel) | Omar Slaiman</title>
+<meta name="description" content="Et eksempel på, hvordan jeg vil følge en ny kunde fra kickoff til go-live på 14 dage. Kunden og alle tal er opdigtede.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F6F1;      /* kassebogens grønlige papir */
+  --sheet:#FBFDFA;
+  --rule:#C9D9CC;       /* kolonnestreger */
+  --ink:#16233B;        /* blåt blæk */
+  --soft:#566179;
+  --honey:#E0A100;      /* i dag-mærket */
+  --honey-ink:#6B4B00;
+  --done:#1F6B4A;
+  --done-bg:#D5EADB;
+  --go:#2F5FA8;
+  --go-bg:#D9E4F5;
+  --wait:#8A6200;
+  --wait-bg:#F6E7B8;
+  --risk:#B3261E;       /* rødt blæk */
+  --risk-bg:#F6D9D5;
+  --late:#EDE3E1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#111A22; --sheet:#17222C; --rule:#2C3C46; --ink:#E6EDF0; --soft:#9DB0BA;
+    --honey:#F0B92B; --honey-ink:#F6D98A;
+    --done:#7BD0A3; --done-bg:#1D4433; --go:#9DBDF2; --go-bg:#22375C;
+    --wait:#F0CF73; --wait-bg:#4A3B10; --risk:#FF9A90; --risk-bg:#55211D; --late:#2A2224;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 150px)}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Schibsted Grotesk", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  font-size:17px; line-height:1.55;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1040px; margin:0 auto; padding:0 22px}
+.notice{background:var(--ink); color:var(--paper); font-size:15px; padding:9px 0}
+.notice b{font-weight:700}
+header.top{padding:54px 0 26px}
+.by{color:var(--soft); font-size:15px; margin:0 0 20px}
+h1{font-size:clamp(40px, 7.4vw, 84px); line-height:.98; letter-spacing:-.035em; font-weight:800; margin:0 0 22px; max-width:11ch}
+.quick{margin-top:24px; max-width:560px; background:var(--sheet); border:1px solid var(--rule); border-left:5px solid var(--honey); padding:14px 18px}
+.quick p{margin:0 0 4px}
+.lead{font-size:clamp(18px, 2.1vw, 21px); line-height:1.5; max-width:62ch; margin:0; color:var(--ink)}
+h2{font-size:clamp(25px, 3.3vw, 34px); line-height:1.12; letter-spacing:-.02em; font-weight:700; margin:0 0 8px}
+h3{font-size:18px; font-weight:700; margin:0 0 4px}
+p{margin:0 0 12px}
+.sub{color:var(--soft); max-width:66ch; margin:0 0 22px}
+section{padding:46px 0 8px}
+
+.tabs{border-top:1px solid var(--rule)}
+.tabs .wrap{display:flex; gap:4px; padding-top:14px; flex-wrap:wrap}
+.tabs button{font:inherit; font-size:16px; font-weight:700; color:var(--soft); background:transparent; border:1px solid transparent; border-bottom:0; border-radius:10px 10px 0 0; padding:10px 18px; cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink); background:var(--sheet); border-color:var(--rule); box-shadow:inset 0 3px 0 var(--honey)}
+#p-man main{padding-bottom:10px}
+/* Kontrolpanel */
+.bar{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--paper); border-top:2px solid var(--ink); border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex; flex-wrap:wrap; gap:12px 26px; align-items:center; padding-top:12px; padding-bottom:12px}
+.ctl{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.ctl > span.lbl{font-size:15px; color:var(--soft)}
+.stepper{display:flex; align-items:center; gap:8px}
+.stepper button{width:40px; height:40px; border-radius:50%; border:1.5px solid var(--ink); background:var(--sheet); color:var(--ink); font:inherit; font-size:20px; line-height:1; cursor:pointer}
+.stepper button:disabled{opacity:.35; cursor:default}
+.daynow{font-weight:800; font-size:20px; min-width:6.2em; text-align:center; font-variant-numeric:tabular-nums}
+input[type=range]{width:min(230px, 46vw); accent-color:var(--honey)}
+.seg{display:inline-flex; border:1.5px solid var(--ink); border-radius:999px; overflow:hidden; background:var(--sheet)}
+.seg button{border:0; background:transparent; color:var(--ink); font:inherit; font-size:15px; font-weight:600; padding:9px 16px; cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink); color:var(--paper)}
+.whatif{display:flex; align-items:center; gap:9px; font-size:15px; cursor:pointer}
+.whatif input{width:20px; height:20px; accent-color:var(--risk)}
+button:focus-visible, input:focus-visible, a:focus-visible{outline:3px solid var(--honey); outline-offset:2px}
+
+/* Nøgletal */
+.facts{display:grid; grid-template-columns:repeat(4, 1fr); border-top:1px solid var(--rule); border-left:1px solid var(--rule); background:var(--sheet); margin-top:8px}
+.fact{padding:16px 18px 18px; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule)}
+.fact .k{font-size:15px; color:var(--soft)}
+.fact .v{font-size:30px; font-weight:800; letter-spacing:-.02em; line-height:1.15; font-variant-numeric:tabular-nums}
+.fact .n{font-size:14.5px; color:var(--soft)}
+.fact.bad .v{color:var(--risk)}
+.fact.good .v{color:var(--done)}
+
+/* Kassebogen: forløbet dag for dag */
+.ledger{background:var(--sheet); border:1px solid var(--rule); border-top:2px solid var(--ink)}
+.dayhead, .cells{display:grid; grid-template-columns:repeat(16, minmax(0,1fr)); gap:0}
+.dayhead{border-bottom:1px solid var(--rule)}
+.dayhead button{border:0; border-right:1px solid var(--rule); background:transparent; color:var(--soft); font:inherit; font-size:13.5px; padding:8px 0; cursor:pointer; font-variant-numeric:tabular-nums}
+.dayhead button:last-child{border-right:0}
+.dayhead button.late{background:var(--late)}
+.dayhead button.promise{font-weight:800; color:var(--ink)}
+.dayhead button.today{background:var(--honey); color:#1b1400; font-weight:800}
+.dayhead button.fc{box-shadow:inset 0 -4px 0 var(--risk)}
+.row{padding:14px 16px 16px; border-bottom:1px solid var(--rule)}
+.row:last-child{border-bottom:0}
+.rowtop{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline; margin-bottom:6px}
+.rowtop h3{margin:0}
+.chip{font-size:13.5px; font-weight:700; padding:2px 10px; border-radius:999px; white-space:nowrap}
+.s-done{background:var(--done-bg); color:var(--done)}
+.s-go{background:var(--go-bg); color:var(--go)}
+.s-wait{background:var(--wait-bg); color:var(--wait)}
+.s-risk{background:var(--risk-bg); color:var(--risk)}
+.s-none{background:transparent; color:var(--soft); border:1px dashed var(--rule)}
+.note{margin:0 0 10px; max-width:74ch}
+.cells i{display:block; height:12px; border-right:1px solid var(--sheet)}
+.cells i.c-done{background:var(--done)}
+.cells i.c-go{background:var(--go)}
+.cells i.c-wait{background:var(--honey)}
+.cells i.c-risk{background:var(--risk)}
+.cells i.c-plan{background:repeating-linear-gradient(135deg, var(--rule) 0 3px, transparent 3px 6px)}
+.cells i.c-late{background:var(--late)}
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:14.5px; color:var(--soft); padding:12px 16px; border-top:1px solid var(--rule)}
+.legend span::before{content:""; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px; background:var(--c)}
+.legend .lp::before{background:repeating-linear-gradient(135deg, var(--rule) 0 3px, transparent 3px 6px)}
+.golive{padding:14px 16px; border-top:2px solid var(--ink); font-weight:700}
+.golive.bad{color:var(--risk)}
+
+/* Det ser jeg / det gør jeg */
+.pairs{display:grid; gap:0; border:1px solid var(--rule); background:var(--sheet)}
+.pair{display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--rule)}
+.pair:last-child{border-bottom:0}
+.pair > div{padding:16px 18px}
+.pair > div:first-child{border-right:1px solid var(--rule)}
+.pair .who{font-size:14.5px; color:var(--soft); margin-bottom:3px}
+.pair p{margin:0}
+
+/* Mail */
+.mail{background:var(--sheet); border:1px solid var(--rule); border-left:5px solid var(--honey); padding:22px 24px; max-width:760px}
+.mail .meta{font-size:15px; color:var(--soft); border-bottom:1px solid var(--rule); padding-bottom:10px; margin-bottom:14px}
+.mail .meta b{color:var(--ink)}
+.mail p{margin:0 0 12px}
+.mail ul{margin:0 0 12px; padding-left:20px}
+.mail li{margin-bottom:3px}
+.handover{margin-top:26px; background:var(--sheet); border:1px solid var(--rule); border-top:2px solid var(--ink); padding:22px 24px; max-width:760px}
+.handover dl{display:grid; grid-template-columns:11.5em 1fr; gap:8px 18px; margin:14px 0 0}
+.handover dt{color:var(--soft)}
+.handover dd{margin:0}
+
+/* Mandagslisten */
+.tablewrap{overflow-x:auto; border:1px solid var(--rule); background:var(--sheet)}
+table{border-collapse:collapse; width:100%; min-width:720px; font-size:16px}
+th, td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--rule); vertical-align:top}
+th{font-size:14.5px; font-weight:600; color:var(--soft); border-bottom:2px solid var(--ink)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700; white-space:nowrap}
+td:last-child{white-space:nowrap; font-weight:700}
+
+.plain{max-width:68ch}
+.plain li{margin-bottom:6px}
+footer{margin-top:54px; border-top:2px solid var(--ink); padding:30px 0 60px}
+footer h2{margin-bottom:4px}
+footer a{color:var(--ink)}
+
+@media (max-width:760px){
+  body{font-size:16px}
+  header.top{padding:34px 0 20px}
+  .facts{grid-template-columns:repeat(2, 1fr)}
+  .pair{grid-template-columns:1fr}
+  .pair > div:first-child{border-right:0; border-bottom:1px dashed var(--rule)}
+  .dayhead button{font-size:11px; padding:7px 0}
+  .handover dl{grid-template-columns:1fr; gap:2px 0}
+  .handover dd{margin-bottom:10px}
+  .bar .wrap{gap:10px 16px}
+  html{scroll-padding-top:230px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .cells i, .chip, .dayhead button{transition:background-color .18s ease}
+}
+</style>
+</head>
+<body>
+
+<div class="notice"><div class="wrap"><b>Eksempel.</b> Kajplads ApS findes ikke, og alle tal er opdigtede. Siden viser, hvordan jeg vil følge en ny kunde fra kickoff til go-live.</div></div>
+
+<header class="top"><div class="wrap">
+  <p class="by">Til Mathias Kobberup og LedgerBee, fra Omar Slaiman</p>
+  <h1>Live på den dato, vi lovede.</h1>
+  <p class="lead">En ny kunde gennem de 14 dage fra kickoff til go-live. Træk i dagen, så skriver tjeklisten og statusmailen sig selv om.</p>
+  <div class="quick">
+    <p><b>Har du et minut?</b></p>
+    <p>Siden åbner på dag 4. Bankfuldmagten mangler, og go-live rykker en dag. Se, hvad jeg gør ved det.</p>
+    <p>Sæt derefter hak i “Hvad nu, hvis …” i baren og se plan B.</p>
+    <p>Support-delen af jobbet ligger under fanen Mandagslisten.</p>
+  </div>
+</div></header>
+
+<nav class="tabs"><div class="wrap" role="tablist" aria-label="Visning">
+  <button role="tab" id="t-onb" aria-selected="true" aria-controls="p-onb">Onboarding: Kajplads</button>
+  <button role="tab" id="t-man" aria-selected="false" aria-controls="p-man">Support: Mandagslisten</button>
+</div></nav>
+
+<div id="p-onb" role="tabpanel" aria-labelledby="t-onb">
+<div class="bar" role="region" aria-label="Vælg dag og læser"><div class="wrap">
+  <div class="ctl">
+    <div class="stepper">
+      <button id="prev" aria-label="Forrige dag">‹</button>
+      <div class="daynow" id="daynow" aria-live="polite">Dag 1 af 14</div>
+      <button id="next" aria-label="Næste dag">›</button>
+    </div>
+    <input type="range" id="range" min="0" max="14" step="1" value="0" aria-label="Vælg dag i forløbet">
+  </div>
+  <div class="ctl">
+    <span class="lbl">Læser</span>
+    <div class="seg" role="group" aria-label="Læser">
+      <button id="r-kunde" aria-pressed="true">Kunden</button>
+      <button id="r-ae" aria-pressed="false">Sælgeren</button>
+    </div>
+  </div>
+  <label class="whatif"><input type="checkbox" id="whatif"> Hvad nu, hvis kunden ikke svarer på bankfuldmagten?</label>
+</div></div>
+
+<main>
+<section><div class="wrap">
+  <h2 id="h-status">Status i dag</h2>
+  <p class="sub">Kajplads ApS sælger software på abonnement, har 14 ansatte og fem systemer: regnskab, løn, abonnementer, udlæg og et regneark. Aftalen lover go-live på dag 14.</p>
+  <div class="facts" id="facts"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Forløbet, dag for dag</h2>
+  <p class="sub">Hver række er et punkt på tjeklisten. Farven viser, hvordan punktet stod hver dag frem til i dag, og skraveringen viser planen for resten. Tryk på en dag for at springe til den.</p>
+  <div class="ledger">
+    <div class="dayhead" id="dayhead"></div>
+    <div id="rows"></div>
+    <div class="legend">
+      <span style="--c:var(--done)">Færdig</span>
+      <span style="--c:var(--go)">I gang</span>
+      <span style="--c:var(--honey)">Venter på kunden</span>
+      <span style="--c:var(--risk)">I fare</span>
+      <span class="lp">Planlagt</span>
+    </div>
+    <div class="golive" id="golive"></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Det skal I vide</h2>
+  <p class="sub">Til venstre det, jeg ser i forløbet. Til højre det, jeg gør ved det, før nogen behøver at spørge.</p>
+  <div class="pairs" id="pairs"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 id="h-mail">Dagens status til kunden</h2>
+  <p class="sub" id="mail-sub">Udkastet er bygget ud fra tjeklisten ovenfor. Det ændrer sig, når du vælger en anden dag eller en anden læser.</p>
+  <div class="mail" id="mail"></div>
+  <div class="handover" id="handover" hidden></div>
+</div></section>
+
+
+
+</main>
+</div>
+
+<div id="p-man" role="tabpanel" aria-labelledby="t-man" hidden>
+<main>
+<section><div class="wrap">
+  <h2>Mandagslisten</h2>
+  <p class="sub">I virkeligheden kører jeg flere kunder side om side. Hver mandag går jeg dem alle igennem, og hver åben sag og hver stille kunde får en handling og en frist. Efter go-live er det de stille kunder, man mister. Her er en opdigtet uge.</p>
+  <div class="facts" style="grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); margin-bottom:18px">
+    <div class="fact good"><div class="k">Første svartid, median</div><div class="v">1 t. 40 min.</div><div class="n">Mål: inden 4 arbejdstimer</div></div>
+    <div class="fact"><div class="k">Sager løst i ugen</div><div class="v">14 af 16</div><div class="n">De to sidste har en frist</div></div>
+    <div class="fact"><div class="k">Stille kunder</div><div class="v">2</div><div class="n">Begge får et opkald</div></div>
+  </div>
+  <div class="tablewrap" tabindex="0" role="region" aria-label="Mandagslisten">
+  <table>
+    <thead><tr><th>Kunde</th><th>Det ser jeg</th><th>Det gør jeg</th><th>Frist</th></tr></thead>
+    <tbody>
+      <tr><td>Bro &amp; Lind</td><td>Åben sag i to dage: lønkørslen fejler for én medarbejder.</td><td>Årsagen er fundet sammen med kunden. Jeg kører en prøvekørsel og ringer, når den er gået igennem.</td><td>I dag</td></tr>
+      <tr><td>Nordlys Studio</td><td>Ingen bankafstemning i 12 dage.</td><td>Ringer. En stille kunde siger sjældent selv til.</td><td>Tirsdag</td></tr>
+      <tr><td>Vestkyst Cykler</td><td>Tredje spørgsmål på en måned om kreditnotaer.</td><td>Skriver svaret én gang som AI-svar med skærmbilleder, så ingen af os skriver det igen.</td><td>I dag</td></tr>
+      <tr><td>Grøn Logistik</td><td>Kun én af fem brugere har logget ind siden go-live.</td><td>Tilbyder 30 minutters oplæring til de fire andre.</td><td>Torsdag</td></tr>
+      <tr><td>Kajplads</td><td>Live i 16 dage. Første månedsluk uden parallelkørsel er om fire dage.</td><td>Booker 20 minutter med økonomichefen dagen før.</td><td>Onsdag</td></tr>
+      <tr><td>Fjordens Tandlæger</td><td>Sag om momsindberetning løst i fredags.</td><td>Følger op: Gik indberetningen igennem?</td><td>Mandag</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div></section>
+</main>
+</div>
+
+<section><div class="wrap">
+  <h2>Sådan er siden lavet</h2>
+  <div class="plain">
+    <p>Jeg har bygget siden med Claude. I en rigtig portefølje henter et flow status hver morgen og skriver udkastet til statusmailen. Jeg læser hver mail, før den går til kunden, og samtalen tager jeg selv.</p>
+    <p>Jeg kender ikke jeres interne forløb, så rækkefølgen er mit bud ud fra jeres jobopslag og hjemmeside. Jeg vil gerne høre, hvor jeg tager fejl.</p>
+  </div>
+</div></section>
+
+
+<footer><div class="wrap">
+  <h2>Omar Slaiman</h2>
+  <p>Ansøger til stillingen Onboarding &amp; Support hos LedgerBee.</p>
+  <p><a href="mailto:omar.slaiman7@gmail.com">omar.slaiman7@gmail.com</a><br>+45 50 62 09 49</p>
+</div></footer>
+
+<script>
+(function(){
+  var DAYS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,30];
+  var state = { i:0, reader:'kunde', alt:false };
+
+  // Status: none, go, wait, risk, done
+  var TASKS = [
+    { id:'data', navn:'Data fra de fem systemer', plan:[1,3], steps:[
+      {d:1,s:'go',  t:'Eksporter bestilt fra alle fem systemer. Kunden har fået en liste med præcis de filer, jeg skal bruge.'},
+      {d:2,s:'wait',t:'Fire af fem eksporter er modtaget. Lønhistorikken mangler. Rykket med frist i morgen kl. 12.'},
+      {d:3,s:'done',t:'Alle fem eksporter er inde. AI har renset filerne: 1.912 debitor- og kreditorposter, 37 dubletter fjernet. Jeg har stikprøvet 50 poster mod kilden.'}
+    ]},
+    { id:'konto', navn:'Kontoplan', plan:[2,5], steps:[
+      {d:2,s:'go',  t:'Kontoplanen er mappet automatisk: 212 af 228 konti. 16 konti kræver en beslutning.'},
+      {d:3,s:'go',  t:'Jeg har gennemgået alle 228 konti og mappet de sidste 16 selv.'},
+      {d:4,s:'wait',t:'Sendt til kundens godkendelse. De 16 konti, jeg har mappet i hånden, er markeret, så økonomichefen kun skal læse dem.'},
+      {d:5,s:'done',t:'Godkendt af økonomichefen.'}
+    ]},
+    { id:'moms', navn:'Momskoder', plan:[4,5], steps:[
+      {d:4,s:'go',  t:'Momskoder sat op ud fra kontoplanen. Tre konti med køb i EU tjekker jeg med kundens bogholder.'},
+      {d:5,s:'done',t:'Momskoderne er på plads og testet på 20 bilag fra sidste kvartal.'}
+    ]},
+    { id:'balance', navn:'Åbningsbalance', plan:[5,8], steps:[
+      {d:5,s:'go',  t:'Saldobalancen fra det gamle system er indlæst pr. skæringsdatoen.'},
+      {d:6,s:'risk',t:'Åbningsbalancen stemmer ikke. Der er en forskel på 12.400 kr. på debitorer. Jeg leder efter årsagen i dag.'},
+      {d:7,s:'go',  t:'Årsagen er fundet: tre fakturaer blev bogført i det gamle system, efter eksporten blev trukket. Ny eksport er bestilt.'},
+      {d:8,s:'done',t:'Stemmer til kronen mod det gamle system. Økonomichefen har godkendt.'}
+    ]},
+    { id:'bank', navn:'Bank', plan:[1,8], steps:[
+      {d:1,s:'go',  t:'Bankforbindelsen er bestilt. Kunden skal underskrive en fuldmagt, og banken kræver to underskrifter.'},
+      {d:2,s:'wait',t:'Fuldmagten ligger til underskrift hos direktøren og bestyrelsesformanden.'},
+      {d:4,s:'risk',t:'Fuldmagten er ikke underskrevet. Er banken ikke på plads på dag 8, kan parallelkørslen ikke starte til tiden.'},
+      {d:6,s:'go',  t:'Underskrevet efter mit opkald i går. Banken opretter forbindelsen.'},
+      {d:8,s:'done',t:'Bankforbindelsen kører. 214 posteringer er afstemt automatisk, og 11 har jeg afstemt i hånden.'}
+    ], alt:[
+      {d:1,s:'go',  t:'Bankforbindelsen er bestilt. Kunden skal underskrive en fuldmagt, og banken kræver to underskrifter.'},
+      {d:2,s:'wait',t:'Fuldmagten ligger til underskrift hos direktøren og bestyrelsesformanden.'},
+      {d:4,s:'risk',t:'Fuldmagten er ikke underskrevet. Er banken ikke på plads på dag 8, kan parallelkørslen ikke starte til tiden.'},
+      {d:6,s:'risk',t:'Stadig ingen underskrift. Bestyrelsesformanden er bortrejst til dag 11.'},
+      {d:8,s:'go',  t:'Plan B er i gang: kunden sender en bankfil hver morgen, som jeg indlæser, så parallelkørslen kan starte til tiden.'},
+      {d:12,s:'done',t:'Fuldmagten blev underskrevet på dag 11. Bankforbindelsen kører og har afløst bankfilerne.'}
+    ]},
+    { id:'apps', navn:'Apps: abonnementer og løn', plan:[6,9], steps:[
+      {d:6,s:'go',  t:'84 abonnementsaftaler er indlæst. AI har foreslået en faktureringscyklus for hver, og jeg tjekker dem mod kontrakterne.'},
+      {d:7,s:'go',  t:'81 af 84 aftaler stemmer. Tre har en rabat, som ikke stod i eksporten. Afklaret med kunden.'},
+      {d:9,s:'done',t:'Abonnementer og løn er sat op. Testfaktura og prøvelønkørsel er godkendt.'}
+    ]},
+    { id:'brugere', navn:'Brugere og roller', plan:[8,10], steps:[
+      {d:8,s:'go',  t:'Seks brugere er oprettet med roller. Godkendelsesflow for regninger over 10.000 kr. er sat op.'},
+      {d:9,s:'wait',t:'Invitationer er sendt. To brugere har ikke logget ind endnu.'},
+      {d:10,s:'done',t:'Alle seks er logget ind. Oplæringen tog 45 minutter og er optaget til dem, der kommer til senere.'}
+    ]},
+    { id:'parallel', navn:'Parallelkørsel: første månedsluk', plan:[10,13], steps:[
+      {d:10,s:'go', t:'Oktober lukkes i begge systemer side om side.'},
+      {d:12,s:'go', t:'Resultat og balance stemmer. Momsen afviger med 310 kr. på grund af en afrunding i det gamle system. Dokumenteret og godkendt.'},
+      {d:13,s:'done',t:'Månedslukket stemmer. Kunden har sagt god for go-live.'}
+    ], alt:[
+      {d:10,s:'go', t:'Oktober lukkes i begge systemer side om side. Banken kører på daglige bankfiler indtil videre.'},
+      {d:12,s:'go', t:'Resultat og balance stemmer. Momsen afviger med 310 kr. på grund af en afrunding i det gamle system. Dokumenteret og godkendt.'},
+      {d:13,s:'done',t:'Månedslukket stemmer. Kunden har sagt god for go-live.'}
+    ]}
+  ];
+
+  // Det ser jeg / det gør jeg. mode: 'both', 'base', 'alt'
+  var EVENTS = [
+    {a:1,b:1,mode:'both',
+      ser:'Kickoff er holdt to arbejdsdage efter underskrift. Kunden forventer koncernrapportering fra dag 1, og det ligger uden for standardforløbet.',
+      gor:'Aftalt med kunden og AE’en samme dag: koncernrapporten kommer i uge 3. Det står i planen, så ingen bliver overrasket.',
+      ae:'Kunden forventede koncernrapport fra dag 1. Aftalt til uge 3, og de er indforståede.'},
+    {a:2,b:2,mode:'both',
+      ser:'Lønhistorikken mangler. Uden den kan jeg ikke afslutte dataimporten i morgen.',
+      gor:'Ringet til bogholderen og sendt en vejledning med tre skærmbilleder. Frist i morgen kl. 12.',
+      kunde:'Lønhistorikken fra jeres lønsystem, senest i morgen kl. 12. Vejledningen ligger i min mail fra i dag.'},
+    {a:3,b:3,mode:'both',
+      ser:'I kundens gamle kontoplan ligger forudbetalinger fra kunder under omsætning. Det er en forpligtelse, ikke en indtægt.',
+      gor:'Jeg retter det ikke selv, for det er kundens bogføring. Jeg har lagt det frem for økonomichefen med et forslag, så hun kan tage det med sin revisor.',
+      kunde:'En beslutning om forudbetalingerne fra kunder. Mit forslag ligger i mailen fra i dag.'},
+    {a:4,b:5,mode:'both',
+      ser:'Bankfuldmagten mangler to underskrifter. Er banken ikke koblet på senest dag 8, rykker go-live.',
+      gor:'Ringet til direktøren i stedet for at sende endnu en rykker. Sagt det lige ud til økonomichefen og AE’en: vi er én dag bagud, og her er planen.',
+      kunde:'To underskrifter på bankfuldmagten. Det er det eneste, der lige nu kan flytte jeres go-live.',
+      ae:'Bankfuldmagten mangler to underskrifter. Kender du direktøren godt nok til at skubbe på?'},
+    {a:6,b:7,mode:'alt',
+      ser:'Bestyrelsesformanden er bortrejst til dag 11. Venter vi på underskriften, går vi live på dag 16.',
+      gor:'Plan B fra dag 8: kunden sender en bankfil hver morgen, som jeg indlæser. Så holder datoen, og bankforbindelsen afløser filerne, når fuldmagten er på plads.',
+      kunde:'Et ja til plan B: en bankfil fra netbanken hver morgen fra dag 8. Det tager jer to minutter om dagen.',
+      ae:'Bankfuldmagten trækker ud til dag 11. Plan B med daglige bankfiler holder datoen, hvis kunden siger ja i dag.'},
+    {a:6,b:6,mode:'both',
+      ser:'Åbningsbalancen afviger med 12.400 kr. på debitorer.',
+      gor:'Jeg går ikke videre, før den stemmer. Jeg sammenligner debitorlisten post for post og giver økonomichefen besked i dag, ikke når jeg har løst det.'},
+    {a:7,b:7,mode:'both',
+      ser:'Forskellen skyldes tre fakturaer, der blev bogført i det gamle system, efter eksporten blev trukket.',
+      gor:'Bestilt en ny eksport og aftalt en fast skæringsdato. Alt efter den bogføres i begge systemer under parallelkørslen, så tallene kan sammenlignes.',
+      kunde:'En ny debitoreksport i dag.'},
+    {a:10,b:11,mode:'both',
+      ser:'Første månedsluk kører i begge systemer. Det er her, kunden finder ud af, om de stoler på tallene.',
+      gor:'Jeg sidder med økonomichefen under lukningen og forklarer råbalancen linje for linje, hvor de to systemer viser tallene forskelligt.'},
+    {a:12,b:13,mode:'both',
+      ser:'Momsen afviger med 310 kr. mellem de to systemer.',
+      gor:'Årsagen er en afrunding pr. linje i det gamle system. Jeg har dokumenteret den og fået økonomichefens godkendelse, før vi går videre.'},
+    {a:14,b:14,mode:'both',
+      ser:'Kunden er live på den lovede dato.',
+      gor:'De næste 30 dage er jeg stadig deres kontakt. Det første månedsluk uden parallelkørsel følger jeg selv.',
+      ae:'Koncernrapporten leveres i uge 3 som aftalt.'},
+    {a:30,b:30,mode:'both',
+      ser:'Kunden har lukket sin første måned alene og har ingen åbne sager.',
+      gor:'Overdraget til support med en skriftlig note. Kunden ved, hvem de skriver til, og support skal ikke spørge om noget, der allerede er afklaret.'},
+    {a:30,b:30,mode:'both',
+      ser:'Økonomichefen har to gange spurgt til firmakort, og kunden har to søsterselskaber i et andet system.',
+      gor:'Givet begge dele videre til AE’en med navn og kontekst. Onboarding ser ting, salget ikke når at se.',
+      ae:'To åbninger: økonomichefen spørger til firmakort, og de to søsterselskaber kører stadig i det gamle system.'}
+  ];
+
+  var LABEL = {none:'Ikke startet', go:'I gang', wait:'Venter på kunden', risk:'I fare', done:'Færdig'};
+
+  function day(){ return DAYS[state.i]; }
+  function steps(t){ return (state.alt && t.alt) ? t.alt : t.steps; }
+  function at(t, d){
+    var cur = {s:'none', t:'Starter på dag ' + t.plan[0] + '.'};
+    var st = steps(t);
+    for (var k=0; k<st.length; k++){ if (st[k].d <= d) cur = st[k]; }
+    return cur;
+  }
+  function forecast(d){
+    if (d >= 14) return 14;
+    if (state.alt){ if (d>=4 && d<=5) return 15; if (d>=6 && d<=7) return 16; return 14; }
+    if (d>=4 && d<=5) return 15;
+    return 14;
+  }
+  function events(d){
+    return EVENTS.filter(function(e){
+      if (d < e.a || d > e.b) return false;
+      if (e.mode === 'base' && state.alt) return false;
+      if (e.mode === 'alt' && !state.alt) return false;
+      return true;
+    });
+  }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function el(id){ return document.getElementById(id); }
+
+  function renderFacts(d){
+    var done=0, wait=0, risk=0;
+    TASKS.forEach(function(t){ var s=at(t,d).s; if(s==='done')done++; if(s==='wait')wait++; if(s==='risk')risk++; });
+    var fc = forecast(d), late = fc-14;
+    var f1 = d>=14
+      ? '<div class="fact good"><div class="k">Dage til go-live</div><div class="v">14</div><div class="n">Live på den lovede dato</div></div>'
+      : '<div class="fact '+(late? 'bad':'good')+'"><div class="k">Prognose for go-live</div><div class="v">Dag '+fc+'</div><div class="n">'+(late? late+(late===1?' dag':' dage')+' efter den lovede dato' : 'Som lovet i aftalen')+'</div></div>';
+    el('facts').innerHTML = f1 +
+      '<div class="fact"><div class="k">Tjeklisten</div><div class="v">'+done+' af '+TASKS.length+'</div><div class="n">punkter er færdige</div></div>' +
+      '<div class="fact"><div class="k">Venter på kunden</div><div class="v">'+wait+'</div><div class="n">'+(wait? 'Rykket med en frist':'Intet ligger hos kunden')+'</div></div>' +
+      '<div class="fact '+(risk?'bad':'')+'"><div class="k">I fare</div><div class="v">'+risk+'</div><div class="n">'+(risk? 'Se, hvad jeg gør ved det':'Ingen åbne risici')+'</div></div>';
+    el('h-status').textContent = d===30 ? 'Status på dag 30: overdragelse' : (d===14 ? 'Status på dag 14: go-live' : 'Status på dag '+d);
+  }
+
+  function renderLedger(d){
+    var fc = forecast(d), head='';
+    for (var n=1; n<=16; n++){
+      var cls=[]; if(n>14)cls.push('late'); if(n===14)cls.push('promise'); if(n===d)cls.push('today'); if(n===fc && fc>14)cls.push('fc');
+      var dis = n>14 ? ' disabled aria-hidden="true" tabindex="-1"' : '';
+      head += '<button class="'+cls.join(' ')+'" data-day="'+n+'"'+dis+' aria-label="Dag '+n+'">'+n+'</button>';
+    }
+    el('dayhead').innerHTML = head;
+    var rows='';
+    TASKS.forEach(function(t){
+      var cur = at(t,d), cells='';
+      var doneDay = null, st = steps(t);
+      st.forEach(function(x){ if(x.s==='done' && doneDay===null) doneDay=x.d; });
+      for (var n=1; n<=16; n++){
+        var c='';
+        if (n<=Math.min(d,14)){ var s=at(t,n).s; c = s==='none' ? '' : 'c-'+s; }
+        else if (n>=t.plan[0] && n<=(doneDay||t.plan[1])) c='c-plan';
+        else if (n>14) c='c-late';
+        cells += '<i class="'+c+'"></i>';
+      }
+      rows += '<div class="row"><div class="rowtop"><h3>'+t.navn+'</h3><span class="chip s-'+cur.s+'">'+LABEL[cur.s]+'</span></div>' +
+              '<p class="note">'+esc(cur.t)+'</p><div class="cells" aria-hidden="true">'+cells+'</div></div>';
+    });
+    el('rows').innerHTML = rows;
+    var g = el('golive'); g.className = 'golive' + (fc>14 ? ' bad':'');
+    g.textContent = d>=14 ? 'Go-live: dag 14, som lovet.' :
+      (fc>14 ? 'Go-live: prognosen siger dag '+fc+'. Lovet er dag 14. Se nedenfor, hvad jeg gør for at hente det.' : 'Go-live: dag 14, som lovet. Prognosen holder.');
+  }
+
+  function renderPairs(d){
+    var ev = events(d), html='';
+    if (!ev.length) html = '<div class="pair"><div><div class="who">Det ser jeg</div><p>Forløbet følger planen i dag.</p></div><div><div class="who">Det gør jeg</div><p>Jeg bruger dagen på at være et skridt foran: tjekker morgendagens punkter og minder kunden om det næste, de skal levere.</p></div></div>';
+    ev.forEach(function(e){
+      html += '<div class="pair"><div><div class="who">Det ser jeg</div><p>'+esc(e.ser)+'</p></div><div><div class="who">Det gør jeg</div><p>'+esc(e.gor)+'</p></div></div>';
+    });
+    el('pairs').innerHTML = html;
+  }
+
+  function list(items){ return '<ul>'+items.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'; }
+
+  function renderMail(d){
+    var done=[], go=[], open=[];
+    TASKS.forEach(function(t){ var c=at(t,d); if(c.s==='done')done.push(t.navn); else if(c.s!=='none'){ go.push(t.navn+': '+c.t); } else open.push(t.navn); });
+    var ev = events(d), fc = forecast(d), late = fc-14, html='';
+    var asks = ev.filter(function(e){return e.kunde;}).map(function(e){return e.kunde;});
+    var aes  = ev.filter(function(e){return e.ae;}).map(function(e){return e.ae;});
+
+    if (state.reader==='kunde'){
+      el('h-mail').textContent = d===30 ? 'Besked til kunden på dag 30' : 'Dagens status til kunden';
+      html += '<div class="meta"><b>Til:</b> Mette, økonomichef hos Kajplads<br><b>Emne:</b> '+(d===30?'Fra i dag har I supportteamet':(d===14?'I er live':'Status dag '+d+' af 14'))+'</div>';
+      html += '<p>Hej Mette</p>';
+      if (d===30){
+        html += '<p>I har nu lukket jeres første måned selv, og der er ingen åbne sager. Fra i dag er det vores supportteam, der hjælper jer.</p>';
+        html += '<p>I skriver til samme adresse som før og får svar inden for fire arbejdstimer. Jeg har givet teamet en note med alt det, vi har aftalt undervejs, så I ikke skal forklare noget forfra.</p>';
+        html += '<p>Koncernrapporten, som vi aftalte til uge 3, er leveret. Tak for et godt forløb, og tak fordi I svarede hurtigt, når jeg rykkede.</p>';
+      } else if (d===14){
+        html += '<p>I er live i dag, på den dato vi aftalte. Månedslukket i de to systemer stemte, og alle seks brugere er i gang.</p>';
+        html += '<p>De næste 30 dage er jeg stadig jeres kontakt. Jeg følger jeres første månedsluk uden det gamle system, og koncernrapporten kommer i uge 3 som aftalt.</p>';
+        html += '<p>Det gamle system kan I lukke for bogføring nu. Behold læseadgangen, til årsregnskabet er afleveret.</p>';
+      } else {
+        html += '<p>'+(d===1 ? 'Tak for et godt kickoff i dag. Her er, hvor vi står, og hvad der sker de næste dage.' : 'Her er status på dag '+d+' af 14.')+'</p>';
+        if (done.length) html += '<p><b>Færdigt</b></p>'+list(done);
+        if (go.length)   html += '<p><b>I gang</b></p>'+list(go);
+        html += '<p><b>Det har jeg brug for fra jer</b></p>'+(asks.length ? list(asks) : '<p>Ingenting lige nu. Jeg siger til i god tid.</p>');
+        html += '<p><b>Go-live</b></p><p>'+(late ? 'Som det ser ud i dag, går vi live på dag '+fc+', altså '+late+(late===1?' dag':' dage')+' senere end aftalt. Det kan vi stadig hente, og det kræver kun det, jeg beder om ovenfor.' : 'Vi går live på dag 14 som aftalt.')+'</p>';
+      }
+      html += '<p>Venlig hilsen<br>Omar</p>';
+    } else {
+      el('h-mail').textContent = d===30 ? 'Besked til AE’en på dag 30' : 'Dagens melding til AE’en';
+      html += '<div class="meta"><b>Til:</b> Jonas, AE hos LedgerBee, der lukkede aftalen med Kajplads<br><b>Emne:</b> Kajplads, '+(d===30?'overdraget til support':'dag '+d+' af 14')+'</div>';
+      html += '<p>Jonas, kort status.</p>';
+      html += '<p><b>Go-live:</b> '+(d>=14 ? 'Live på dag 14, som du lovede.' : (late ? 'Prognose dag '+fc+'. Lovet dag 14.' : 'Dag 14 holder.'))+'<br><b>Tjekliste:</b> '+done.length+' af '+TASKS.length+' færdige.</p>';
+      html += '<p><b>Det skal du vide</b></p>'+(aes.length ? list(aes) : '<p>Intet, der kræver dig i dag.</p>');
+      if (d<14) html += '<p><b>Fra salget</b></p><p>Koncernrapporten er aftalt til uge 3. Lover du noget nyt, så skriv det til mig samme dag, så det kommer med i planen.</p>';
+      html += '<p>Omar</p>';
+    }
+    el('mail').innerHTML = html;
+    el('mail-sub').textContent = d===30 ? 'På dag 30 skifter kunden fra onboarding til support. Nedenfor er den note, supportteamet får.' : 'Udkastet er bygget ud fra tjeklisten ovenfor. Det ændrer sig, når du vælger en anden dag eller en anden læser.';
+
+    var h = el('handover');
+    if (d===30){
+      h.hidden = false;
+      h.innerHTML = '<h3>Overdragelsesnote til support</h3><p style="margin:0;color:var(--soft)">Skrevet, så den næste ikke behøver at spørge om noget.</p><dl>' +
+        '<dt>Kunde</dt><dd>Kajplads ApS, 14 ansatte, sælger software på abonnement. Live siden dag 14.</dd>' +
+        '<dt>Kontakt</dt><dd>Mette, økonomichef, træffer beslutningerne. Bogholderen bruger systemet dagligt og ringer hellere, end hun skriver.</dd>' +
+        '<dt>Værd at vide</dt><dd>Tre abonnementer har en manuel rabat, som står i aftalenoten på hver.'+(state.alt?' Banken kørte på daglige bankfiler fra dag 8 til dag 11.':'')+'</dd>' +
+        '<dt>Næste kontakt</dt><dd>Kvartalets momsindberetning er deres første i systemet. Ring ugen før.</dd></dl>';
+    } else { h.hidden = true; h.innerHTML=''; }
+  }
+
+  function render(){
+    var d = day();
+    el('daynow').textContent = d===30 ? 'Dag 30' : 'Dag '+d+' af 14';
+    el('range').value = state.i;
+    el('range').setAttribute('aria-valuetext', d===30 ? 'Dag 30, overdragelse' : 'Dag '+d);
+    el('prev').disabled = state.i===0; el('next').disabled = state.i===DAYS.length-1;
+    el('r-kunde').setAttribute('aria-pressed', state.reader==='kunde');
+    el('r-ae').setAttribute('aria-pressed', state.reader==='ae');
+    renderFacts(d); renderLedger(d); renderPairs(d); renderMail(d);
+  }
+
+  el('prev').addEventListener('click', function(){ if(state.i>0){state.i--; render();} });
+  el('next').addEventListener('click', function(){ if(state.i<DAYS.length-1){state.i++; render();} });
+  el('range').addEventListener('input', function(e){ state.i = +e.target.value; render(); });
+  el('r-kunde').addEventListener('click', function(){ state.reader='kunde'; render(); });
+  el('r-ae').addEventListener('click', function(){ state.reader='ae'; render(); });
+  el('whatif').addEventListener('change', function(e){ state.alt = e.target.checked; render(); });
+  el('dayhead').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b || b.disabled) return;
+    state.i = DAYS.indexOf(+b.getAttribute('data-day')); render();
+  });
+
+  function tab(which){
+    var onb = which==='onb';
+    el('t-onb').setAttribute('aria-selected', onb); el('t-man').setAttribute('aria-selected', !onb);
+    el('p-onb').hidden = !onb; el('p-man').hidden = onb;
+    try{ history.replaceState(null,'', onb ? location.pathname : '#mandagslisten'); }catch(e){}
+  }
+  el('t-onb').addEventListener('click', function(){ tab('onb'); });
+  el('t-man').addEventListener('click', function(){ tab('man'); });
+  document.querySelector('.tabs [role=tablist]').addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ var to = el('p-onb').hidden ? 'onb':'man'; tab(to); el(to==='onb'?'t-onb':'t-man').focus(); }
+  });
+  if (location.hash==='#mandagslisten') tab('man');
+
+  // Åbn på dag 4, hvor der sker noget.
+  state.i = 3;
+  render();
+})();
+</script>
+</body>
+</html>
